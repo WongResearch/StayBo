@@ -1,0 +1,278 @@
+---
+openapi: 3.0.2
+info:
+  title: StayBo API
+  description: API for StayBo property rental service
+  version: 1.0.0
+  contact:
+    name: Nick
+    email: nick@nke.net
+
+
+tags:
+  - name: properties
+    description: Property management endpoints
+  - name: bookings
+    description: Booking management endpoints
+  - name: reviews
+    description: Review management endpoints
+
+paths:
+  /properties:
+    get:
+      summary: List all properties
+      description: Returns a paginated list of properties with optional filters
+      tags:
+        - properties
+      parameters:
+        - name: page
+          in: query
+          description: Page number to fetch
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+          example: 1
+        - name: limit
+          in: query
+          description: Number of items per page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 20
+          example: 20
+        - name: location
+          in: query
+          description: Filter by location
+          schema:
+            type: string
+          example: "Lac-Beauport, Canada"
+      responses:
+        '200':
+          description: List of properties
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PropertyList'
+              example:
+                items:
+                  - id: "prop-001"
+                    name: "Cozy Mountain Cabin"
+                    location: "Lac-Beauport, Canada"
+                    type: "Cabin"
+                    capacity: 4
+                    bedrooms: 2
+                    beds: 3
+                    rating: 4.8
+                    reviewsCount: 124
+                    host:
+                      name: "Marie Dubois"
+                      isSuperhost: true
+                      experienceYears: 5
+                    amenities: ["WiFi", "Kitchen", "Fireplace", "Mountain view"]
+                    images:
+                      - "https://staybo.com/images/properties/prop-001-1.jpg"
+                      - "https://staybo.com/images/properties/prop-001-2.jpg"
+                page: 1
+                totalPages: 50
+                totalItems: 1000
+        '400':
+          description: Invalid parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: "INVALID_PARAMETER"
+                message: "Page number must be greater than 0"
+
+  /properties/{propertyId}:
+    get:
+      summary: Get property details
+      description: Returns detailed information about a specific property
+      operationId: getProperty
+      tags:
+        - properties
+      parameters:
+        - name: propertyId
+          in: path
+          required: true
+          description: ID of the property
+          schema:
+            type: string
+          example: "prop-001"
+      responses:
+        '200':
+          description: Property details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Property'
+              example:
+                id: "prop-001"
+                name: "Cozy Mountain Cabin"
+                location: "Lac-Beauport, Canada"
+                type: "Cabin"
+                capacity: 4
+                bedrooms: 2
+                beds: 3
+                rating: 4.8
+                reviewsCount: 124
+                host:
+                  name: "Marie Dubois"
+                  isSuperhost: true
+                  experienceYears: 5
+                amenities: ["WiFi", "Kitchen", "Fireplace", "Mountain view"]
+                images:
+                  - "https://staybo.com/images/properties/prop-001-1.jpg"
+                  - "https://staybo.com/images/properties/prop-001-2.jpg"
+        '404':
+          description: Property not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: "PROPERTY_NOT_FOUND"
+                message: "Property with ID prop-001 was not found"
+
+security:
+  - BearerAuth: []
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    PropertyList:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Property'
+        page:
+          type: integer
+        totalPages:
+          type: integer
+        totalItems:
+          type: integer
+      example:
+        items:
+          - id: "prop-001"
+            name: "Cozy Mountain Cabin"
+            location: "Lac-Beauport, Canada"
+            type: "Cabin"
+            capacity: 4
+            bedrooms: 2
+            beds: 3
+            rating: 4.8
+            reviewsCount: 124
+            host:
+              name: "Marie Dubois"
+              isSuperhost: true
+              experienceYears: 5
+            amenities: ["WiFi", "Kitchen", "Fireplace", "Mountain view"]
+            images:
+              - "https://staybo.com/images/properties/prop-001-1.jpg"
+              - "https://staybo.com/images/properties/prop-001-2.jpg"
+        page: 1
+        totalPages: 50
+        totalItems: 1000
+
+    Property:
+      type: object
+      required:
+        - id
+        - name
+        - location
+        - type
+        - capacity
+        - bedrooms
+        - beds
+        - host
+      properties:
+        id:
+          type: string
+          example: "prop-001"
+        name:
+          type: string
+          example: "Cozy Mountain Cabin"
+        location:
+          type: string
+          example: "Lac-Beauport, Canada"
+        type:
+          type: string
+          example: "Cabin"
+        capacity:
+          type: integer
+          minimum: 1
+          example: 4
+        bedrooms:
+          type: integer
+          minimum: 0
+          example: 2
+        beds:
+          type: integer
+          minimum: 1
+          example: 3
+        rating:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 5
+          example: 4.8
+        reviewsCount:
+          type: integer
+          minimum: 0
+          example: 124
+        host:
+          $ref: '#/components/schemas/Host'
+        amenities:
+          type: array
+          items:
+            type: string
+          example: ["WiFi", "Kitchen", "Fireplace", "Mountain view"]
+        images:
+          type: array
+          items:
+            type: string
+            format: uri
+          example:
+            - "https://staybo.com/images/properties/prop-001-1.jpg"
+            - "https://staybo.com/images/properties/prop-001-2.jpg"
+
+    Host:
+      type: object
+      required:
+        - name
+        - isSuperhost
+        - experienceYears
+      properties:
+        name:
+          type: string
+          example: "Marie Dubois"
+        isSuperhost:
+          type: boolean
+          example: true
+        experienceYears:
+          type: integer
+          minimum: 0
+          example: 5
+
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          example: "PROPERTY_NOT_FOUND"
+        message:
+          type: string
+          example: "Property with ID prop-001 was not found"
+---

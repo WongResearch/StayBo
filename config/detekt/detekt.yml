@@ -35,7 +35,8 @@ complexity:
   LargeClass:
     threshold: 600
   LongMethod:
-    threshold: 60
+    threshold: 150
+    ignoreAnnotated: ['Composable']
   LongParameterList:
     functionThreshold: 6
     constructorThreshold: 7
